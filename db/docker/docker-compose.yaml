@@ -1,0 +1,25 @@
+version: "1.0.0"
+name: go-backend-practice-db
+
+services:
+  db:
+    container_name: db_container
+    image: postgres:16.4
+    restart: always
+    environment:
+      POSTGRES_DB: social
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+      PGDATA: /var/lib/postgresql/social/data
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/social/data
+    healthcheck:
+      test:
+        ["CMD", "pg_isready", "-U", "admin", "-d", "social", "-h", "localhost"]
+      interval: 5s
+      retries: 5
+
+volumes:
+  db-data:

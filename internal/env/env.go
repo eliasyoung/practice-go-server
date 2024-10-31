@@ -49,7 +49,7 @@ func GetDotEnvConfig(key string) string {
 
 	val, ok := os.LookupEnv(key)
 
-	if !ok {
+	if !ok || len(val) == 0 {
 		log.Fatalf("%s in .env not found!", key)
 	}
 
@@ -73,10 +73,39 @@ func GetDotEnvConfigWithFallback(key, fallback string) string {
 	}
 
 	val, ok := os.LookupEnv(key)
-	if !ok {
+	if !ok || len(val) == 0 {
 		return fallback
 	}
 
 	return val
 
+}
+
+func GetIntDotEnvConfigWithFallback(key string, fallback int) int {
+	wd, err := os.Getwd()
+
+	if err != nil {
+		return fallback
+	}
+
+	envPath := filepath.Join(wd, ".env")
+
+	err = godotenv.Load(envPath)
+
+	if err != nil {
+		return fallback
+	}
+
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return fallback
+	}
+
+	valAsInt, error := strconv.Atoi(val)
+
+	if error != nil {
+		return fallback
+	}
+
+	return valAsInt
 }
