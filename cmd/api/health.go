@@ -15,5 +15,4 @@ func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Reques
 		app.internalServerError(w, r, err)
 	}
 
-	// app.store.Posts.Create(r.Context())
 }

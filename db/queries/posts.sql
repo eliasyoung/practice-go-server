@@ -7,3 +7,6 @@ RETURNING id, created_at, updated_at;
 SELECT id, user_id, title, content, created_at, updated_at, tags
 FROM posts
 WHERE id = $1;
+
+-- name: DeletePostById :execrows
+DELETE FROM posts WHERE id = $1;

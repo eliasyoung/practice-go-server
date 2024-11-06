@@ -11,6 +11,8 @@ import (
 type Querier interface {
 	CreatePost(ctx context.Context, arg CreatePostParams) (CreatePostRow, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	DeletePostById(ctx context.Context, id int64) (int64, error)
+	GetCommentsByPostId(ctx context.Context, postID int64) ([]GetCommentsByPostIdRow, error)
 	GetPostById(ctx context.Context, id int64) (GetPostByIdRow, error)
 }
 
