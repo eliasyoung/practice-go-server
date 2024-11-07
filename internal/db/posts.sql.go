@@ -55,7 +55,7 @@ func (q *Queries) DeletePostById(ctx context.Context, id int64) (int64, error) {
 }
 
 const getPostById = `-- name: GetPostById :one
-SELECT id, user_id, title, content, created_at, updated_at, tags
+SELECT id, user_id, title, content, created_at, updated_at, tags, version
 FROM posts
 WHERE id = $1
 `
@@ -68,6 +68,7 @@ type GetPostByIdRow struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 	Tags      []string           `json:"tags"`
+	Version   pgtype.Int4        `json:"version"`
 }
 
 func (q *Queries) GetPostById(ctx context.Context, id int64) (GetPostByIdRow, error) {
@@ -81,23 +82,33 @@ func (q *Queries) GetPostById(ctx context.Context, id int64) (GetPostByIdRow, er
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Tags,
+		&i.Version,
 	)
 	return i, err
 }
 
-const updatePostById = `-- name: UpdatePostById :exec
+const updatePostById = `-- name: UpdatePostById :one
 UPDATE posts
-SET title = $1, content = $2
-WHERE id = $3
+SET title = $1, content = $2, version = version + 1
+WHERE id = $3 AND version = $4
+RETURNING version
 `
 
 type UpdatePostByIdParams struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	ID      int64  `json:"id"`
+	Title   string      `json:"title"`
+	Content string      `json:"content"`
+	ID      int64       `json:"id"`
+	Version pgtype.Int4 `json:"version"`
 }
 
-func (q *Queries) UpdatePostById(ctx context.Context, arg UpdatePostByIdParams) error {
-	_, err := q.db.Exec(ctx, updatePostById, arg.Title, arg.Content, arg.ID)
-	return err
+func (q *Queries) UpdatePostById(ctx context.Context, arg UpdatePostByIdParams) (pgtype.Int4, error) {
+	row := q.db.QueryRow(ctx, updatePostById,
+		arg.Title,
+		arg.Content,
+		arg.ID,
+		arg.Version,
+	)
+	var version pgtype.Int4
+	err := row.Scan(&version)
+	return version, err
 }

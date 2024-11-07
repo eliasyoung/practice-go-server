@@ -24,6 +24,7 @@ type Post struct {
 	Tags      []string           `json:"tags"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	Version   pgtype.Int4        `json:"version"`
 }
 
 type User struct {

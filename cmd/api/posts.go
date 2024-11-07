@@ -60,6 +60,7 @@ type GetPostResultWithComments struct {
 	UserID    int64                       `json:"user_id"`
 	Title     string                      `json:"title"`
 	Content   string                      `json:"content"`
+	Version   pgtype.Int4                 `json:"version"`
 	CreatedAt pgtype.Timestamptz          `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz          `json:"updated_at"`
 	Tags      []string                    `json:"tags"`
@@ -84,6 +85,7 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 		Content:   post.Content,
 		CreatedAt: post.CreatedAt,
 		UpdatedAt: post.UpdatedAt,
+		Version:   post.Version,
 		Tags:      post.Tags,
 		Comments:  comments,
 	}
@@ -164,10 +166,18 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		ID:      post.ID,
 		Title:   post.Title,
 		Content: post.Content,
+		Version: post.Version,
 	}
 
-	if err := app.store.Queries.UpdatePostById(r.Context(), updatePost); err != nil {
+	if _, err := app.store.Queries.UpdatePostById(r.Context(), updatePost); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			app.notFoundResponse(w, r, err)
+		}
 		app.internalServerError(w, r, err)
+	}
+
+	if len(post.Tags) == 0 {
+		post.Tags = make([]string, 0)
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {

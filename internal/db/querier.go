@@ -6,6 +6,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -14,7 +16,7 @@ type Querier interface {
 	DeletePostById(ctx context.Context, id int64) (int64, error)
 	GetCommentsByPostId(ctx context.Context, postID int64) ([]GetCommentsByPostIdRow, error)
 	GetPostById(ctx context.Context, id int64) (GetPostByIdRow, error)
-	UpdatePostById(ctx context.Context, arg UpdatePostByIdParams) error
+	UpdatePostById(ctx context.Context, arg UpdatePostByIdParams) (pgtype.Int4, error)
 }
 
 var _ Querier = (*Queries)(nil)
