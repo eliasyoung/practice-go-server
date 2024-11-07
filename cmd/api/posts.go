@@ -51,7 +51,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, row)
+	app.jsonResponse(w, http.StatusOK, row)
 
 }
 
@@ -96,7 +96,7 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 		postRes.Comments = make([]db.GetCommentsByPostIdRow, 0)
 	}
 
-	if err := writeJSON(w, http.StatusOK, postRes); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, postRes); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -170,7 +170,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		app.internalServerError(w, r, err)
 	}
 
-	if err := writeJSON(w, http.StatusOK, post); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
