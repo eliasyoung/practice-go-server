@@ -84,3 +84,20 @@ func (q *Queries) GetPostById(ctx context.Context, id int64) (GetPostByIdRow, er
 	)
 	return i, err
 }
+
+const updatePostById = `-- name: UpdatePostById :exec
+UPDATE posts
+SET title = $1, content = $2
+WHERE id = $3
+`
+
+type UpdatePostByIdParams struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+	ID      int64  `json:"id"`
+}
+
+func (q *Queries) UpdatePostById(ctx context.Context, arg UpdatePostByIdParams) error {
+	_, err := q.db.Exec(ctx, updatePostById, arg.Title, arg.Content, arg.ID)
+	return err
+}

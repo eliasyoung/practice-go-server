@@ -22,3 +22,16 @@ func validateCreatePostPayload(data *CreatePostPayload) error {
 
 	return err
 }
+
+func validateUpdatePostPayload(data *UpdatePostPayload) error {
+	rules := map[string]string{
+		"Title":   "omitempty,max=100",
+		"Content": "omitempty,max=1000",
+	}
+
+	Validate.RegisterStructValidationMapRules(rules, CreatePostPayload{})
+
+	err := Validate.Struct(data)
+
+	return err
+}

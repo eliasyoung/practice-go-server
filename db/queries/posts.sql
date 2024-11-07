@@ -10,3 +10,8 @@ WHERE id = $1;
 
 -- name: DeletePostById :execrows
 DELETE FROM posts WHERE id = $1;
+
+-- name: UpdatePostById :exec
+UPDATE posts
+SET title = $1, content = $2
+WHERE id = $3;

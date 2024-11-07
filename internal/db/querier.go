@@ -14,6 +14,7 @@ type Querier interface {
 	DeletePostById(ctx context.Context, id int64) (int64, error)
 	GetCommentsByPostId(ctx context.Context, postID int64) ([]GetCommentsByPostIdRow, error)
 	GetPostById(ctx context.Context, id int64) (GetPostByIdRow, error)
+	UpdatePostById(ctx context.Context, arg UpdatePostByIdParams) error
 }
 
 var _ Querier = (*Queries)(nil)

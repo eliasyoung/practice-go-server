@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -11,6 +12,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type postKey string
+
+const postCtx postKey = "post"
 
 type CreatePostPayload struct {
 	Title   string   `json:"title"`
@@ -62,29 +67,9 @@ type GetPostResultWithComments struct {
 }
 
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
-	pid := chi.URLParam(r, "postID")
-	id, err := strconv.ParseInt(pid, 10, 64)
-	if err != nil {
-		if errors.Is(err, strconv.ErrSyntax) {
-			app.badRequestResponse(w, r, err)
-			return
-		}
-		app.internalServerError(w, r, err)
-		return
-	}
+	post := getPostFromCtx(r)
 
 	ctx := r.Context()
-
-	post, err := app.store.Queries.GetPostById(ctx, id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			app.notFoundResponse(w, r, err)
-			return
-		}
-
-		app.badRequestResponse(w, r, err)
-		return
-	}
 
 	comments, err := app.store.Queries.GetCommentsByPostId(ctx, post.ID)
 	if err != nil {
@@ -111,7 +96,10 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 		postRes.Comments = make([]db.GetCommentsByPostIdRow, 0)
 	}
 
-	writeJSON(w, http.StatusOK, postRes)
+	if err := writeJSON(w, http.StatusOK, postRes); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }
 
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -142,4 +130,84 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type UpdatePostPayload struct {
+	Title   *string `json:"title"`
+	Content *string `json:"content"`
+}
+
+func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
+	post := getPostFromCtx(r)
+
+	var payload UpdatePostPayload
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := validateUpdatePostPayload(&payload); err != nil {
+		app.badRequestResponse(w, r, errors.New("请求参数错误!"))
+		return
+	}
+
+	if payload.Title != nil {
+		post.Title = *payload.Title
+	}
+
+	if payload.Content != nil {
+		post.Content = *payload.Content
+	}
+
+	updatePost := db.UpdatePostByIdParams{
+		ID:      post.ID,
+		Title:   post.Title,
+		Content: post.Content,
+	}
+
+	if err := app.store.Queries.UpdatePostById(r.Context(), updatePost); err != nil {
+		app.internalServerError(w, r, err)
+	}
+
+	if err := writeJSON(w, http.StatusOK, post); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		pid := chi.URLParam(r, "postID")
+		id, err := strconv.ParseInt(pid, 10, 64)
+		if err != nil {
+			if errors.Is(err, strconv.ErrSyntax) {
+				app.badRequestResponse(w, r, err)
+				return
+			}
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		ctx := r.Context()
+
+		post, err := app.store.Queries.GetPostById(ctx, id)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				app.notFoundResponse(w, r, err)
+				return
+			}
+
+			app.badRequestResponse(w, r, err)
+			return
+		}
+
+		ctx = context.WithValue(ctx, postCtx, &post)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func getPostFromCtx(r *http.Request) *db.GetPostByIdRow {
+	post, _ := r.Context().Value(postCtx).(*db.GetPostByIdRow)
+
+	return post
 }
