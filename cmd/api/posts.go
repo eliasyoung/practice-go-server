@@ -43,7 +43,8 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		UserID:  1,
 	}
 
-	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
+	defer cancel()
 
 	row, err := app.store.Queries.CreatePost(ctx, *post)
 	if err != nil {
@@ -70,7 +71,8 @@ type GetPostResultWithComments struct {
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 
-	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
+	defer cancel()
 
 	comments, err := app.store.Queries.GetCommentsByPostId(ctx, post.ID)
 	if err != nil {
@@ -117,7 +119,8 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
+	defer cancel()
 
 	rowsAffected, err := app.store.Queries.DeletePostById(ctx, id)
 	if err != nil {
@@ -169,7 +172,10 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		Version: post.Version,
 	}
 
-	if _, err := app.store.Queries.UpdatePostById(r.Context(), updatePost); err != nil {
+	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
+	defer cancel()
+
+	if _, err := app.store.Queries.UpdatePostById(ctx, updatePost); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			app.notFoundResponse(w, r, err)
 		}
@@ -198,7 +204,8 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := r.Context()
+		ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
+		defer cancel()
 
 		post, err := app.store.Queries.GetPostById(ctx, id)
 		if err != nil {
@@ -211,7 +218,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx = context.WithValue(ctx, postCtx, &post)
+		ctx = context.WithValue(r.Context(), postCtx, &post)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

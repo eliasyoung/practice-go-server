@@ -1,6 +1,14 @@
 package db
 
-import "github.com/jackc/pgx/v5/pgxpool"
+import (
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var (
+	QueryTimeoutDuration = time.Second * 5
+)
 
 type Store struct {
 	connPool *pgxpool.Pool
