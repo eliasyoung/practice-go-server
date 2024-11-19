@@ -16,3 +16,13 @@ UPDATE posts
 SET title = $1, content = $2, version = version + 1
 WHERE id = $3 AND version = $4
 RETURNING version;
+
+-- name: GetPostsWithMetaData :many
+SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags,
+COUNT (c.id) AS comments_count
+FROM posts p
+LEFT JOIN comments c ON c.post_id = p.id
+JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
+WHERE f.user_id = $1
+GROUP BY p.id
+ORDER BY p.created_at DESC;

@@ -87,6 +87,57 @@ func (q *Queries) GetPostById(ctx context.Context, id int64) (GetPostByIdRow, er
 	return i, err
 }
 
+const getPostsWithMetaData = `-- name: GetPostsWithMetaData :many
+SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags,
+COUNT (c.id) AS comments_count
+FROM posts p
+LEFT JOIN comments c ON c.post_id = p.id
+JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
+WHERE f.user_id = $1
+GROUP BY p.id
+ORDER BY p.created_at DESC
+`
+
+type GetPostsWithMetaDataRow struct {
+	ID            int64              `json:"id"`
+	UserID        int64              `json:"user_id"`
+	Title         string             `json:"title"`
+	Content       string             `json:"content"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	Version       pgtype.Int4        `json:"version"`
+	Tags          []string           `json:"tags"`
+	CommentsCount int64              `json:"comments_count"`
+}
+
+func (q *Queries) GetPostsWithMetaData(ctx context.Context, userID int64) ([]GetPostsWithMetaDataRow, error) {
+	rows, err := q.db.Query(ctx, getPostsWithMetaData, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPostsWithMetaDataRow
+	for rows.Next() {
+		var i GetPostsWithMetaDataRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Title,
+			&i.Content,
+			&i.CreatedAt,
+			&i.Version,
+			&i.Tags,
+			&i.CommentsCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updatePostById = `-- name: UpdatePostById :one
 UPDATE posts
 SET title = $1, content = $2, version = version + 1

@@ -92,13 +92,8 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 		Comments:  comments,
 	}
 
-	if len(postRes.Tags) == 0 {
-		postRes.Tags = make([]string, 0)
-	}
-
-	if len(postRes.Comments) == 0 {
-		postRes.Comments = make([]db.GetCommentsByPostIdRow, 0)
-	}
+	postRes.Tags = responseSliceFormater(postRes.Tags)
+	postRes.Comments = responseSliceFormater(postRes.Comments)
 
 	if err := app.jsonResponse(w, http.StatusOK, postRes); err != nil {
 		app.internalServerError(w, r, err)
@@ -177,14 +172,14 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 
 	if _, err := app.store.Queries.UpdatePostById(ctx, updatePost); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			app.notFoundResponse(w, r, err)
+			app.notFoundResponse(w, r, db.ErrNotFound)
+			return
 		}
 		app.internalServerError(w, r, err)
+		return
 	}
 
-	if len(post.Tags) == 0 {
-		post.Tags = make([]string, 0)
-	}
+	post.Tags = responseSliceFormater(post.Tags)
 
 	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
@@ -210,7 +205,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 		post, err := app.store.Queries.GetPostById(ctx, id)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				app.notFoundResponse(w, r, err)
+				app.notFoundResponse(w, r, db.ErrNotFound)
 				return
 			}
 

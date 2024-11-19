@@ -16,6 +16,12 @@ type Comment struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type Follower struct {
+	UserID     int64              `json:"user_id"`
+	FollowerID int64              `json:"follower_id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
 type Post struct {
 	ID        int64              `json:"id"`
 	Title     string             `json:"title"`

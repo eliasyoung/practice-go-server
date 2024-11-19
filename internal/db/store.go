@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -8,6 +9,8 @@ import (
 
 var (
 	QueryTimeoutDuration = time.Second * 5
+	ErrNotFound          = errors.New("resource not found")
+	ErrConflict          = errors.New("resource already exists")
 )
 
 type Store struct {

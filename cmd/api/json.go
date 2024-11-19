@@ -39,3 +39,11 @@ func (app *application) jsonResponse(w http.ResponseWriter, status int, data any
 		Data: data,
 	})
 }
+
+func responseSliceFormater[T any](slice []T) []T {
+	if len(slice) == 0 {
+		return make([]T, 0)
+	} else {
+		return slice
+	}
+}

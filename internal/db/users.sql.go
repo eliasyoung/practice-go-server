@@ -34,3 +34,30 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	err := row.Scan(&i.ID, &i.CreatedAt)
 	return i, err
 }
+
+const getUserById = `-- name: GetUserById :one
+SELECT id, username, password, email, created_at
+FROM users
+WHERE id = $1
+`
+
+type GetUserByIdRow struct {
+	ID        int64              `json:"id"`
+	Username  string             `json:"username"`
+	Password  []byte             `json:"password"`
+	Email     string             `json:"email"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error) {
+	row := q.db.QueryRow(ctx, getUserById, id)
+	var i GetUserByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.CreatedAt,
+	)
+	return i, err
+}
