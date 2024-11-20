@@ -95,8 +95,18 @@ LEFT JOIN comments c ON c.post_id = p.id
 JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
 WHERE f.user_id = $1
 GROUP BY p.id
-ORDER BY p.created_at DESC
+ORDER BY 
+    CASE WHEN $2 = 'asc' THEN p.created_at END ASC,
+    CASE WHEN $2 = 'desc' THEN p.created_at END DESC
+LIMIT $3 OFFSET $4
 `
+
+type GetPostsWithMetaDataParams struct {
+	UserID  int64       `json:"user_id"`
+	Column2 interface{} `json:"column_2"`
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
+}
 
 type GetPostsWithMetaDataRow struct {
 	ID            int64              `json:"id"`
@@ -109,8 +119,13 @@ type GetPostsWithMetaDataRow struct {
 	CommentsCount int64              `json:"comments_count"`
 }
 
-func (q *Queries) GetPostsWithMetaData(ctx context.Context, userID int64) ([]GetPostsWithMetaDataRow, error) {
-	rows, err := q.db.Query(ctx, getPostsWithMetaData, userID)
+func (q *Queries) GetPostsWithMetaData(ctx context.Context, arg GetPostsWithMetaDataParams) ([]GetPostsWithMetaDataRow, error) {
+	rows, err := q.db.Query(ctx, getPostsWithMetaData,
+		arg.UserID,
+		arg.Column2,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

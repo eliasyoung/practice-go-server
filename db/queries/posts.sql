@@ -25,4 +25,7 @@ LEFT JOIN comments c ON c.post_id = p.id
 JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
 WHERE f.user_id = $1
 GROUP BY p.id
-ORDER BY p.created_at DESC;
+ORDER BY 
+    CASE WHEN $2 = 'asc' THEN p.created_at END ASC,
+    CASE WHEN $2 = 'desc' THEN p.created_at END DESC
+LIMIT $3 OFFSET $4;

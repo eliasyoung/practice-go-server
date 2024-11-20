@@ -63,14 +63,14 @@ func validateFollowUserPayload(data *FollowUser) error {
 	return err
 }
 
-func validatePagiationQuery(data *PaginatedFeedQuery) error {
+func validatePagiationQuery(data *db.PaginatedFeedQuery) error {
 	rules := map[string]string{
 		"Limit":  "gte=1,lte=20",
 		"Offset": "gte=0",
 		"Sort":   "oneof=asc desc",
 	}
 
-	Validate.RegisterStructValidationMapRules(rules, PaginatedFeedQuery{})
+	Validate.RegisterStructValidationMapRules(rules, db.PaginatedFeedQuery{})
 
 	err := Validate.Struct(data)
 
