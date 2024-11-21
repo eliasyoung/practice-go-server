@@ -3,12 +3,18 @@ package db
 import (
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type PaginatedFeedQuery struct {
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-	Sort   string `json:"sort"`
+	Limit  int      `json:"limit"`
+	Offset int      `json:"offset"`
+	Sort   string   `json:"sort"`
+	Tags   []string `json:"tags"`
+	Search string   `json:"search"`
+	Since  string   `json:"since"`
+	Until  string   `json:"until"`
 }
 
 func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) {
@@ -37,5 +43,35 @@ func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) 
 		fq.Sort = sort
 	}
 
+	tags := qs.Get("tags")
+	if tags != "" {
+		fq.Tags = strings.Split(tags, ",")
+	}
+
+	search := qs.Get("search")
+	if search != "" {
+		fq.Search = search
+	}
+
+	since := qs.Get("since")
+	if since != "" {
+		fq.Since = parseTime(since)
+	}
+
+	until := qs.Get("until")
+	if until != "" {
+		fq.Until = parseTime(until)
+	}
+
 	return fq, nil
+}
+
+func parseTime(s string) string {
+	t, err := time.Parse(time.DateTime, s)
+
+	if err != nil {
+		return ""
+	}
+
+	return t.Format(time.DateTime)
 }

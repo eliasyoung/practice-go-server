@@ -88,13 +88,19 @@ func (q *Queries) GetPostById(ctx context.Context, id int64) (GetPostByIdRow, er
 }
 
 const getPostsWithMetaData = `-- name: GetPostsWithMetaData :many
-SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags,
+SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags, u.username,
 COUNT (c.id) AS comments_count
 FROM posts p
 LEFT JOIN comments c ON c.post_id = p.id
-JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
-WHERE f.user_id = $1
-GROUP BY p.id
+LEFT JOIN users u ON p.user_id = u.id
+JOIN followers f ON f.user_id = p.user_id OR p.user_id = $1
+WHERE 
+    (p.user_id = $1 OR f.follower_id = $1) AND
+    (p.title ILIKE '%' || $5 || '%' OR p.content ILIKE '%' || $5 || '%') AND
+    (p.tags @> $6 OR $6 = '{}') AND
+    (p.created_at >= $7 OR $7 IS NULL) AND
+    (p.created_at <= $8 OR $8 IS NULL)
+GROUP BY p.id, u.username
 ORDER BY 
     CASE WHEN $2 = 'asc' THEN p.created_at END ASC,
     CASE WHEN $2 = 'desc' THEN p.created_at END DESC
@@ -102,10 +108,14 @@ LIMIT $3 OFFSET $4
 `
 
 type GetPostsWithMetaDataParams struct {
-	UserID  int64       `json:"user_id"`
-	Column2 interface{} `json:"column_2"`
-	Limit   int32       `json:"limit"`
-	Offset  int32       `json:"offset"`
+	UserID      int64              `json:"user_id"`
+	Column2     interface{}        `json:"column_2"`
+	Limit       int32              `json:"limit"`
+	Offset      int32              `json:"offset"`
+	Column5     pgtype.Text        `json:"column_5"`
+	Tags        []string           `json:"tags"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	CreatedAt_2 pgtype.Timestamptz `json:"created_at_2"`
 }
 
 type GetPostsWithMetaDataRow struct {
@@ -116,6 +126,7 @@ type GetPostsWithMetaDataRow struct {
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	Version       pgtype.Int4        `json:"version"`
 	Tags          []string           `json:"tags"`
+	Username      pgtype.Text        `json:"username"`
 	CommentsCount int64              `json:"comments_count"`
 }
 
@@ -125,6 +136,10 @@ func (q *Queries) GetPostsWithMetaData(ctx context.Context, arg GetPostsWithMeta
 		arg.Column2,
 		arg.Limit,
 		arg.Offset,
+		arg.Column5,
+		arg.Tags,
+		arg.CreatedAt,
+		arg.CreatedAt_2,
 	)
 	if err != nil {
 		return nil, err
@@ -141,6 +156,7 @@ func (q *Queries) GetPostsWithMetaData(ctx context.Context, arg GetPostsWithMeta
 			&i.CreatedAt,
 			&i.Version,
 			&i.Tags,
+			&i.Username,
 			&i.CommentsCount,
 		); err != nil {
 			return nil, err

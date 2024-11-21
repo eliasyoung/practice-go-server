@@ -68,6 +68,10 @@ func validatePagiationQuery(data *db.PaginatedFeedQuery) error {
 		"Limit":  "gte=1,lte=20",
 		"Offset": "gte=0",
 		"Sort":   "oneof=asc desc",
+		"Tags":   "max=5",
+		"Search": "max=100",
+		"Since":  "max=200",
+		"Until":  "max=200",
 	}
 
 	Validate.RegisterStructValidationMapRules(rules, db.PaginatedFeedQuery{})
