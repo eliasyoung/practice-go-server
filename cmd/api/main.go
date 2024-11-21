@@ -10,6 +10,23 @@ import (
 
 const version = "0.0.1"
 
+//	@title			GO BACKEND API
+//	@description	This is a sample server with chi
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+//	@host						petstore.swagger.io
+//	@BasePath					/v2
+//	@securityDefinitions.apikey	ApiKeyAuth
+//	@in							header
+//	@name						Authorization
+//	@description
 func main() {
 	cfg := config{
 		addr: env.GetDotEnvConfigWithFallback("ADDR", ":8080"),
@@ -19,7 +36,8 @@ func main() {
 			maxIdleConns: env.GetIntDotEnvConfigWithFallback("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetDotEnvConfigWithFallback("DB_MAX_IDLE_TIME", "15min"),
 		},
-		env: env.GetDotEnvConfigWithFallback("ENV", "development"),
+		env:    env.GetDotEnvConfigWithFallback("ENV", "development"),
+		apiURL: env.GetDotEnvConfigWithFallback("EXTERNAL_URL", "localhost:8080"),
 	}
 
 	conn := db.GetConnPool(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime)
