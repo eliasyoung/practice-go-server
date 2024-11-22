@@ -46,6 +46,20 @@ func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request
 
 }
 
+// GetUser godoc
+//
+//	@Summary		Fetches a user profile
+//	@Description	Fetches a user profile by ID
+//	@Tags			Users
+//	@Accpet			json
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	db.GetUserByIdRow
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromCtx(r)
 
@@ -60,6 +74,19 @@ type FollowUser struct {
 	UserID int64 `json:"user_id"`
 }
 
+// FollowerUser godoc
+//
+//	@Summary		Follower a user
+//	@Description	Follower a user by ID
+//	@Tags			Users
+//	@Accpet			json
+//	@Produce		json
+//	@Param			userID	path		int		true	"User ID"
+//	@Success		200		{object}	string	"user followered"
+//	@Failure		400		{object}	error	"user payload missing"
+//	@Failure		404		{object}	error	"user not found"
+//	@Security		ApiKeyAuth
+//	@Router			/users/{userID}/follow [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	userToFollow := getUserFromCtx(r)
 
@@ -108,6 +135,19 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// UnfollowerUser godoc
+//
+//	@Summary		Unfollower a user
+//	@Description	Unfollower a user by ID
+//	@Tags			Users
+//	@Accpet			json
+//	@Produce		json
+//	@Param			userID	path		int		true	"User ID"
+//	@Success		200		{object}	string	"user unfollowered"
+//	@Failure		400		{object}	error	"user payload missing"
+//	@Failure		404		{object}	error	"user not found"
+//	@Security		ApiKeyAuth
+//	@Router			/users/{userID}/unfollow [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	userToUnfollow := getUserFromCtx(r)
 

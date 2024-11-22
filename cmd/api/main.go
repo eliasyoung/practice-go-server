@@ -21,12 +21,12 @@ const version = "0.0.1"
 //	@license.name	Apache 2.0
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-//	@host						petstore.swagger.io
-//	@BasePath					/v2
-//	@securityDefinitions.apikey	ApiKeyAuth
-//	@in							header
-//	@name						Authorization
-//	@description
+// @host						petstore.swagger.io
+// @BasePath					/v1
+// @securityDefinitions.apikey	ApiKeyAuth
+// @in							header
+// @name						Authorization
+// @description
 func main() {
 	cfg := config{
 		addr: env.GetDotEnvConfigWithFallback("ADDR", ":8080"),
