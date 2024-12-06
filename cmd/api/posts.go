@@ -202,8 +202,8 @@ func (app *application) getAllPostsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	for _, post := range posts {
-		post.Tags = responseSliceFormater(post.Tags)
+	for i, post := range posts {
+		posts[i].Tags = responseSliceFormater(post.Tags)
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, posts); err != nil {
