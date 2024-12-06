@@ -189,6 +189,29 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+func (app *application) getAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := app.store.Queries.GetUsers(ctx)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			app.notFoundResponse(w, r, db.ErrNotFound)
+			return
+		}
+
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, rows); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+}
+
 func (app *application) usersContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		uid, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)

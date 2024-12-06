@@ -1,11 +1,10 @@
 package main
 
 import (
-	"log"
-
 	"github.com/eliasyoung/go-backend-server-practice/internal/db"
 	"github.com/eliasyoung/go-backend-server-practice/internal/env"
 	"github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
 )
 
 const version = "0.0.1"
@@ -40,6 +39,12 @@ func main() {
 		apiURL: env.GetDotEnvConfigWithFallback("EXTERNAL_URL", "localhost:8080"),
 	}
 
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer logger.Sync()
+
+	// setup logger for package db first before calling any db func
+	db.SetupLogger(logger)
+
 	conn := db.GetConnPool(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime)
 	defer conn.Close()
 
@@ -48,7 +53,7 @@ func main() {
 	mig := db.NewMigrator(dbb)
 
 	if err := mig.Migrate(); err != nil {
-		log.Panicf("Error occured when migrating: %s", err)
+		logger.Panicf("Error occured when migrating: %s", err)
 	}
 
 	store := db.NewPostgresStore(conn)
@@ -56,8 +61,9 @@ func main() {
 	app := &application{
 		config: cfg,
 		store:  *store,
+		logger: logger,
 	}
 
 	mux := app.mount()
-	log.Fatal((app.run(mux)))
+	logger.Fatal((app.run(mux)))
 }

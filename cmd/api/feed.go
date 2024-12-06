@@ -7,6 +7,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// GetUserFeed godoc
+//
+//	@Summary		Get a user's feed
+//	@Description	Get a user's feed
+//	@Tags			Feed
+//	@Accpet			json
+//	@Produce		json
+//	@Param			since	query		string	false	"Since"
+//	@Param			until	query		string	false	"Until"
+//	@Param			offset	query		int		false	"Sort"
+//	@Param			tags	query		string	false	"Tags"
+//	@Param			search	query		string	false	"Search"
+//	@Success		200		{object}	[]db.GetPostsWithMetaDataRow
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/feed [get]
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
 
 	fq := db.PaginatedFeedQuery{

@@ -7,3 +7,8 @@ RETURNING id, created_at;
 SELECT id, username, password, email, created_at
 FROM users
 WHERE id = $1;
+
+
+-- name: GetUsers :many
+SELECT id, username, email, created_at
+FROM users;

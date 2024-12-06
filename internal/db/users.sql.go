@@ -61,3 +61,40 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 	)
 	return i, err
 }
+
+const getUsers = `-- name: GetUsers :many
+SELECT id, username, email, created_at
+FROM users
+`
+
+type GetUsersRow struct {
+	ID        int64              `json:"id"`
+	Username  string             `json:"username"`
+	Email     string             `json:"email"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) GetUsers(ctx context.Context) ([]GetUsersRow, error) {
+	rows, err := q.db.Query(ctx, getUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUsersRow
+	for rows.Next() {
+		var i GetUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.Email,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

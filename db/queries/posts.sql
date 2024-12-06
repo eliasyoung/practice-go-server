@@ -35,3 +35,11 @@ ORDER BY
     CASE WHEN $2 = 'asc' THEN p.created_at END ASC,
     CASE WHEN $2 = 'desc' THEN p.created_at END DESC
 LIMIT $3 OFFSET $4;
+
+-- name: GetAllPosts :many
+SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.tags, u.username,
+COUNT (c.id) AS comments_count
+FROM posts p
+LEFT JOIN comments c ON c.post_id = p.id
+LEFT JOIN users u ON p.user_id = u.id
+GROUP BY p.id, u.username;

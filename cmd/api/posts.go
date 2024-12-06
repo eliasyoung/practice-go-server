@@ -186,6 +186,32 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+func (app *application) getAllPostsHandler(w http.ResponseWriter, r *http.Request) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
+	defer cancel()
+
+	posts, err := app.store.Queries.GetAllPosts(ctx)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			app.notFoundResponse(w, r, db.ErrNotFound)
+			return
+		}
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	for _, post := range posts {
+		post.Tags = responseSliceFormater(post.Tags)
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, posts); err != nil {
+		app.internalServerError(w, r, err)
+	}
+
+}
+
 func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pid := chi.URLParam(r, "postID")

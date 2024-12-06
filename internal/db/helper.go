@@ -5,7 +5,14 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
 )
+
+var logger *zap.SugaredLogger
+
+func SetupLogger(l *zap.SugaredLogger) {
+	logger = l
+}
 
 func ParseToPgTimestamptz(input string) (pgtype.Timestamptz, error) {
 	// Parse string to Go's time.Time

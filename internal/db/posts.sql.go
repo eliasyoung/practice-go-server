@@ -54,6 +54,55 @@ func (q *Queries) DeletePostById(ctx context.Context, id int64) (int64, error) {
 	return result.RowsAffected(), nil
 }
 
+const getAllPosts = `-- name: GetAllPosts :many
+SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.tags, u.username,
+COUNT (c.id) AS comments_count
+FROM posts p
+LEFT JOIN comments c ON c.post_id = p.id
+LEFT JOIN users u ON p.user_id = u.id
+GROUP BY p.id, u.username
+`
+
+type GetAllPostsRow struct {
+	ID            int64              `json:"id"`
+	UserID        int64              `json:"user_id"`
+	Title         string             `json:"title"`
+	Content       string             `json:"content"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	Tags          []string           `json:"tags"`
+	Username      pgtype.Text        `json:"username"`
+	CommentsCount int64              `json:"comments_count"`
+}
+
+func (q *Queries) GetAllPosts(ctx context.Context) ([]GetAllPostsRow, error) {
+	rows, err := q.db.Query(ctx, getAllPosts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllPostsRow
+	for rows.Next() {
+		var i GetAllPostsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Title,
+			&i.Content,
+			&i.CreatedAt,
+			&i.Tags,
+			&i.Username,
+			&i.CommentsCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPostById = `-- name: GetPostById :one
 SELECT id, user_id, title, content, created_at, updated_at, tags, version
 FROM posts
