@@ -25,7 +25,9 @@ log = "build-errors.log"
 poll = false
 poll_interval = 0
 post_cmd = []
-pre_cmd = [make gen-docs]
+pre_cmd = ["make gen-docs"]
+# windows
+# pre_cmd = ["make gen-docs-wins"]
 rerun = false
 rerun_delay = 500
 send_interrupt = false
