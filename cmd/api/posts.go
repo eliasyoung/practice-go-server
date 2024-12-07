@@ -194,16 +194,16 @@ func (app *application) getAllPostsHandler(w http.ResponseWriter, r *http.Reques
 	posts, err := app.store.Queries.GetAllPosts(ctx)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			app.notFoundResponse(w, r, db.ErrNotFound)
-			return
-		}
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	for i, post := range posts {
-		posts[i].Tags = responseSliceFormater(post.Tags)
+	if len(posts) != 0 {
+		for i, post := range posts {
+			posts[i].Tags = responseSliceFormater(post.Tags)
+		}
+	} else {
+		posts = responseSliceFormater(posts)
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, posts); err != nil {

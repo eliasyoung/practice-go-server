@@ -193,19 +193,18 @@ func (app *application) getAllUsersHandler(w http.ResponseWriter, r *http.Reques
 	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
 	defer cancel()
 
-	rows, err := app.store.Queries.GetUsers(ctx)
+	users, err := app.store.Queries.GetUsers(ctx)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			app.notFoundResponse(w, r, db.ErrNotFound)
-			return
-		}
-
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, rows); err != nil {
+	if len(users) == 0 {
+		users = responseSliceFormater(users)
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, users); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
