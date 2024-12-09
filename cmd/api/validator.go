@@ -80,3 +80,17 @@ func validatePagiationQuery(data *db.PaginatedFeedQuery) error {
 
 	return err
 }
+
+func validateRegisterUserPayload(data *RegisterUserPayload) error {
+	rules := map[string]string{
+		"Username": "required,max=100",
+		"Email":    "required,email,max=255",
+		"Password": "required,min=3,max=72",
+	}
+
+	Validate.RegisterStructValidationMapRules(rules, RegisterUserPayload{})
+
+	err := Validate.Struct(data)
+
+	return err
+}

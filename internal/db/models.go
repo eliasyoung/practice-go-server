@@ -39,4 +39,10 @@ type User struct {
 	Username  string             `json:"username"`
 	Password  []byte             `json:"password"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	IsActive  bool               `json:"is_active"`
+}
+
+type UserInvitation struct {
+	Token  []byte `json:"token"`
+	UserID int64  `json:"user_id"`
 }
