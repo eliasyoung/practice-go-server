@@ -1,8 +1,11 @@
 package main
 
 import (
+	"time"
+
 	"github.com/eliasyoung/go-backend-server-practice/internal/db"
 	"github.com/eliasyoung/go-backend-server-practice/internal/env"
+	"github.com/eliasyoung/go-backend-server-practice/internal/service"
 	"github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 )
@@ -37,6 +40,9 @@ func main() {
 		},
 		env:    env.GetDotEnvConfigWithFallback("ENV", "development"),
 		apiURL: env.GetDotEnvConfigWithFallback("EXTERNAL_URL", "localhost:8080"),
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3,
+		},
 	}
 
 	logger := zap.Must(zap.NewProduction()).Sugar()
@@ -58,10 +64,15 @@ func main() {
 
 	store := db.NewPostgresStore(conn)
 
+	services := service.Services{
+		User: service.NewUserService(store),
+	}
+
 	app := &application{
-		config: cfg,
-		store:  *store,
-		logger: logger,
+		config:  cfg,
+		store:   *store,
+		service: services,
+		logger:  logger,
 	}
 
 	mux := app.mount()

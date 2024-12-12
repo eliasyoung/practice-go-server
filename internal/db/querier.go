@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	CreatePost(ctx context.Context, arg CreatePostParams) (CreatePostRow, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	CreateUserInvitation(ctx context.Context, arg CreateUserInvitationParams) error
 	DeletePostById(ctx context.Context, id int64) (int64, error)
 	Follow(ctx context.Context, arg FollowParams) error
 	GetAllPosts(ctx context.Context) ([]GetAllPostsRow, error)

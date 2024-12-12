@@ -7,6 +7,7 @@ import (
 
 	"github.com/eliasyoung/go-backend-server-practice/docs"
 	"github.com/eliasyoung/go-backend-server-practice/internal/db"
+	"github.com/eliasyoung/go-backend-server-practice/internal/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -15,9 +16,10 @@ import (
 )
 
 type application struct {
-	config config
-	store  db.Store
-	logger *zap.SugaredLogger
+	config  config
+	store   db.Store
+	service service.Services
+	logger  *zap.SugaredLogger
 }
 
 type config struct {
@@ -25,6 +27,7 @@ type config struct {
 	db     dbConfig
 	env    string
 	apiURL string
+	mail   mailConfig
 }
 
 type dbConfig struct {
@@ -32,6 +35,10 @@ type dbConfig struct {
 	maxOpenConns int
 	maxIdleConns int
 	maxIdleTime  string
+}
+
+type mailConfig struct {
+	exp time.Duration
 }
 
 func (app *application) mount() http.Handler {

@@ -10,8 +10,12 @@ import (
 
 var (
 	QueryTimeoutDuration = time.Second * 5
-	ErrNotFound          = errors.New("resource not found")
-	ErrConflict          = errors.New("resource already exists")
+	// common errors
+	ErrNotFound = errors.New("resource not found")
+	ErrConflict = errors.New("resource already exists")
+	// users related error
+	ErrDuplicateEmail    = errors.New("a user with that email already exists")
+	ErrDuplicateUsername = errors.New("a user with that username already exists")
 )
 
 type Store struct {
@@ -26,7 +30,7 @@ func NewPostgresStore(connPool *pgxpool.Pool) *Store {
 	}
 }
 
-func (s *Store) ExecWithTx(ctx context.Context, fn func(*Queries) error) error {
+func ExecWithTx(ctx context.Context, s *Store, fn func(*Queries) error) error {
 	conn, err := s.ConnPool.Acquire(ctx)
 	if err != nil {
 		return err

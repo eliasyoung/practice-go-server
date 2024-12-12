@@ -28,21 +28,15 @@ func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	user := &db.CreateUserParams{
-		Username: payload.Username,
-		Password: payload.Password,
-		Email:    payload.Email,
-	}
+	// ctx := r.Context()
 
-	ctx := r.Context()
+	// row, err := app.service.User.CreateUser(ctx, payload.Username, payload.Password, payload.Email)
+	// if err != nil {
+	// 	app.internalServerError(w, r, err)
+	// 	return
+	// }
 
-	row, err := app.store.Queries.CreateUser(ctx, *user)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
-
-	app.jsonResponse(w, http.StatusOK, row)
+	app.jsonResponse(w, http.StatusOK, payload)
 
 }
 
@@ -107,12 +101,7 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
 	defer cancel()
 
-	followParams := db.FollowParams{
-		UserID:     userToFollow.ID,
-		FollowerID: payload.UserID,
-	}
-
-	if err := app.store.Queries.Follow(ctx, followParams); err != nil {
+	if err := app.service.User.FollowUserById(ctx, userToFollow.ID, payload.UserID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			app.notFoundResponse(w, r, db.ErrNotFound)
 			return
@@ -168,12 +157,7 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
 	defer cancel()
 
-	unfollowParams := db.UnfollowParams{
-		UserID:     userToUnfollow.ID,
-		FollowerID: payload.UserID,
-	}
-
-	if err := app.store.Queries.Unfollow(ctx, unfollowParams); err != nil {
+	if err := app.service.User.UnfollowUserById(ctx, userToUnfollow.ID, payload.UserID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			app.notFoundResponse(w, r, db.ErrNotFound)
 			return
@@ -193,8 +177,7 @@ func (app *application) getAllUsersHandler(w http.ResponseWriter, r *http.Reques
 	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
 	defer cancel()
 
-	users, err := app.store.Queries.GetUsers(ctx)
-
+	users, err := app.service.User.GetAllUser(ctx)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -214,7 +197,6 @@ func (app *application) getAllUsersHandler(w http.ResponseWriter, r *http.Reques
 func (app *application) usersContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		uid, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
-
 		if err != nil {
 			if errors.Is(err, strconv.ErrSyntax) {
 				app.badRequestResponse(w, r, err)
@@ -226,8 +208,7 @@ func (app *application) usersContextMiddleware(next http.Handler) http.Handler {
 
 		ctx := r.Context()
 
-		user, err := app.store.Queries.GetUserById(ctx, uid)
-
+		user, err := app.service.User.GetUserById(ctx, uid)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				app.notFoundResponse(w, r, db.ErrNotFound)

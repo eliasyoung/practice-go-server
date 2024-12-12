@@ -43,6 +43,7 @@ type User struct {
 }
 
 type UserInvitation struct {
-	Token  []byte `json:"token"`
-	UserID int64  `json:"user_id"`
+	Token  []byte             `json:"token"`
+	UserID int64              `json:"user_id"`
+	Expiry pgtype.Timestamptz `json:"expiry"`
 }
