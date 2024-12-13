@@ -77,18 +77,6 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// ctx := r.Context()
-
-	// app.store.ExecWithTx(ctx, func(q *db.Queries) error {
-
-	// 	id, err := q.UpdatePostById(ctx,  arg db.UpdatePostByIdParams)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	return nil
-	// })
-
 	if err := app.jsonResponse(w, http.StatusCreated, tempUser); err != nil {
 		app.internalServerError(w, r, err)
 	}

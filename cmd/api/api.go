@@ -82,7 +82,7 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/users", func(r chi.Router) {
-			r.Post("/", app.createUserHandler)
+			// r.Post("/", app.createUserHandler)
 			r.Get("/", app.getAllUsersHandler)
 
 			r.Route("/{userID}", func(r chi.Router) {
@@ -96,9 +96,10 @@ func (app *application) mount() http.Handler {
 				r.Get("/feed", app.getUserFeedHandler)
 			})
 
-			r.Route("/authentication", func(r chi.Router) {
-				r.Post("/user", app.registerUserHandler)
-			})
+		})
+
+		r.Route("/authentication", func(r chi.Router) {
+			r.Post("/user", app.registerUserHandler)
 		})
 	})
 	return r

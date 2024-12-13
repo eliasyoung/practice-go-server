@@ -50,6 +50,7 @@ func main() {
 
 	// setup logger for package db first before calling any db func
 	db.SetupLogger(logger)
+	service.SetupLogger(logger)
 
 	conn := db.GetConnPool(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime)
 	defer conn.Close()

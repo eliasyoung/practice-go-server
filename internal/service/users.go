@@ -27,9 +27,9 @@ func (s *UserService) CreateUser(ctx context.Context, txq *db.Queries, username 
 	row, err := txq.CreateUser(ctx, user)
 	if err != nil {
 		switch {
-		case err.Error() == `pg: duplicate key value violates unique constraint "user_email_key"`:
+		case err.Error() == `ERROR: duplicate key value violates unique constraint "users_email_key" (SQLSTATE 23505)`:
 			return db.CreateUserRow{}, db.ErrDuplicateEmail
-		case err.Error() == `pg: duplicate key value violates unique constraint "user_username_key"`:
+		case err.Error() == `ERROR: duplicate key value violates unique constraint "users_username_key" (SQLSTATE 23505)`:
 			return db.CreateUserRow{}, db.ErrDuplicateUsername
 		default:
 			return db.CreateUserRow{}, err
