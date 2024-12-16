@@ -24,6 +24,9 @@ func (s *PostService) CreatePost(ctx context.Context, title string, content stri
 		UserID:  userId,
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
 	row, err := s.store.Queries.CreatePost(ctx, post)
 	if err != nil {
 		return db.CreatePostRow{}, err
@@ -33,6 +36,9 @@ func (s *PostService) CreatePost(ctx context.Context, title string, content stri
 }
 
 func (s *PostService) GetAllPosts(ctx context.Context) ([]db.GetAllPostsRow, error) {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
 	posts, err := s.store.Queries.GetAllPosts(ctx)
 	if err != nil {
 		return nil, err
@@ -42,6 +48,9 @@ func (s *PostService) GetAllPosts(ctx context.Context) ([]db.GetAllPostsRow, err
 }
 
 func (s *PostService) GetPostById(ctx context.Context, pid int64) (db.GetPostByIdRow, error) {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
 	post, err := s.store.Queries.GetPostById(ctx, pid)
 	if err != nil {
 		return db.GetPostByIdRow{}, err
@@ -51,6 +60,9 @@ func (s *PostService) GetPostById(ctx context.Context, pid int64) (db.GetPostByI
 }
 
 func (s *PostService) UpdatePostById(ctx context.Context, updatedPost db.UpdatePostByIdParams) error {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
 	if _, err := s.store.Queries.UpdatePostById(ctx, updatedPost); err != nil {
 		return err
 	}
@@ -59,6 +71,9 @@ func (s *PostService) UpdatePostById(ctx context.Context, updatedPost db.UpdateP
 }
 
 func (s *PostService) DeletePostById(ctx context.Context, pid int64) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
 	rowsAffected, err := s.store.Queries.DeletePostById(ctx, pid)
 	if err != nil {
 		// maybe logger needed in future.

@@ -15,15 +15,18 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	CreateUserInvitation(ctx context.Context, arg CreateUserInvitationParams) error
 	DeletePostById(ctx context.Context, id int64) (int64, error)
+	DeleteUserInvitationByUserId(ctx context.Context, userID int64) error
 	Follow(ctx context.Context, arg FollowParams) error
 	GetAllPosts(ctx context.Context) ([]GetAllPostsRow, error)
 	GetCommentsByPostId(ctx context.Context, postID int64) ([]GetCommentsByPostIdRow, error)
 	GetPostById(ctx context.Context, id int64) (GetPostByIdRow, error)
 	GetPostsWithMetaData(ctx context.Context, arg GetPostsWithMetaDataParams) ([]GetPostsWithMetaDataRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
+	GetUserFromInvitation(ctx context.Context, arg GetUserFromInvitationParams) (GetUserFromInvitationRow, error)
 	GetUsers(ctx context.Context) ([]GetUsersRow, error)
 	Unfollow(ctx context.Context, arg UnfollowParams) error
 	UpdatePostById(ctx context.Context, arg UpdatePostByIdParams) (pgtype.Int4, error)
+	UpdateUserInfoById(ctx context.Context, arg UpdateUserInfoByIdParams) error
 }
 
 var _ Querier = (*Queries)(nil)

@@ -9,6 +9,7 @@ func SetupLogger(l *zap.SugaredLogger) {
 }
 
 type Services struct {
-	User *UserService
-	Post *PostService
+	User    *UserService
+	Post    *PostService
+	Comment *CommentService
 }

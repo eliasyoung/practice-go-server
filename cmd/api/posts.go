@@ -36,8 +36,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
-	defer cancel()
+	ctx := r.Context()
 
 	row, err := app.service.Post.CreatePost(ctx, payload.Title, payload.Content, payload.Tags, 1)
 	if err != nil {
@@ -64,10 +63,9 @@ type GetPostResultWithComments struct {
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 
-	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
-	defer cancel()
+	ctx := r.Context()
 
-	comments, err := app.store.Queries.GetCommentsByPostId(ctx, post.ID)
+	comments, err := app.service.Comment.GetCommentsByPostId(ctx, post.ID)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -107,8 +105,7 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
-	defer cancel()
+	ctx := r.Context()
 
 	rowsAffected, err := app.service.Post.DeletePostById(ctx, id)
 	if err != nil {
@@ -160,8 +157,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		Version: post.Version,
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
-	defer cancel()
+	ctx := r.Context()
 
 	if err := app.service.Post.UpdatePostById(ctx, updatePost); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -180,9 +176,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) getAllPostsHandler(w http.ResponseWriter, r *http.Request) {
-
-	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
-	defer cancel()
+	ctx := r.Context()
 
 	posts, err := app.service.Post.GetAllPosts(ctx)
 	if err != nil {
@@ -217,8 +211,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
-		defer cancel()
+		ctx := r.Context()
 
 		post, err := app.service.Post.GetPostById(ctx, id)
 		if err != nil {

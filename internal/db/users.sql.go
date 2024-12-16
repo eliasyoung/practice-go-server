@@ -62,6 +62,40 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 	return i, err
 }
 
+const getUserFromInvitation = `-- name: GetUserFromInvitation :one
+SELECT u.id, u.username, u.email, u.created_at, u.is_active
+FROM users u
+JOIN user_invitations ui
+ON u.id = ui.user_id
+WHERE ui.token = $1 AND ui.expiry > $2
+`
+
+type GetUserFromInvitationParams struct {
+	Token  []byte             `json:"token"`
+	Expiry pgtype.Timestamptz `json:"expiry"`
+}
+
+type GetUserFromInvitationRow struct {
+	ID        int64              `json:"id"`
+	Username  string             `json:"username"`
+	Email     string             `json:"email"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	IsActive  bool               `json:"is_active"`
+}
+
+func (q *Queries) GetUserFromInvitation(ctx context.Context, arg GetUserFromInvitationParams) (GetUserFromInvitationRow, error) {
+	row := q.db.QueryRow(ctx, getUserFromInvitation, arg.Token, arg.Expiry)
+	var i GetUserFromInvitationRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.CreatedAt,
+		&i.IsActive,
+	)
+	return i, err
+}
+
 const getUsers = `-- name: GetUsers :many
 SELECT id, username, email, created_at
 FROM users
@@ -97,4 +131,27 @@ func (q *Queries) GetUsers(ctx context.Context) ([]GetUsersRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateUserInfoById = `-- name: UpdateUserInfoById :exec
+UPDATE users
+SET username = $1, email = $2, is_active = $3
+WHERE id = $4
+`
+
+type UpdateUserInfoByIdParams struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	IsActive bool   `json:"is_active"`
+	ID       int64  `json:"id"`
+}
+
+func (q *Queries) UpdateUserInfoById(ctx context.Context, arg UpdateUserInfoByIdParams) error {
+	_, err := q.db.Exec(ctx, updateUserInfoById,
+		arg.Username,
+		arg.Email,
+		arg.IsActive,
+		arg.ID,
+	)
+	return err
 }

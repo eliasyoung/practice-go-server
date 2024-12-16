@@ -98,8 +98,7 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
-	defer cancel()
+	ctx := r.Context()
 
 	if err := app.service.User.FollowUserById(ctx, userToFollow.ID, payload.UserID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -154,8 +153,7 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
-	defer cancel()
+	ctx := r.Context()
 
 	if err := app.service.User.UnfollowUserById(ctx, userToUnfollow.ID, payload.UserID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -174,8 +172,7 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) getAllUsersHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
-	defer cancel()
+	ctx := r.Context()
 
 	users, err := app.service.User.GetAllUser(ctx)
 	if err != nil {
@@ -192,6 +189,27 @@ func (app *application) getAllUsersHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+}
+
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+
+	err := app.service.User.Activate(r.Context(), token)
+	if err != nil {
+		switch err {
+		case db.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+			return
+		default:
+			app.internalServerError(w, r, err)
+			return
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }
 
 func (app *application) usersContextMiddleware(next http.Handler) http.Handler {
