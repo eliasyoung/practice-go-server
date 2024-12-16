@@ -36,17 +36,10 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	post := &db.CreatePostParams{
-		Title:   payload.Title,
-		Content: payload.Content,
-		Tags:    payload.Tags,
-		UserID:  1,
-	}
-
 	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
 	defer cancel()
 
-	row, err := app.store.Queries.CreatePost(ctx, *post)
+	row, err := app.service.Post.CreatePost(ctx, payload.Title, payload.Content, payload.Tags, 1)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -117,7 +110,7 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
 	defer cancel()
 
-	rowsAffected, err := app.store.Queries.DeletePostById(ctx, id)
+	rowsAffected, err := app.service.Post.DeletePostById(ctx, id)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -170,7 +163,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
 	defer cancel()
 
-	if _, err := app.store.Queries.UpdatePostById(ctx, updatePost); err != nil {
+	if err := app.service.Post.UpdatePostById(ctx, updatePost); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			app.notFoundResponse(w, r, db.ErrNotFound)
 			return
@@ -191,8 +184,7 @@ func (app *application) getAllPostsHandler(w http.ResponseWriter, r *http.Reques
 	ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
 	defer cancel()
 
-	posts, err := app.store.Queries.GetAllPosts(ctx)
-
+	posts, err := app.service.Post.GetAllPosts(ctx)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -228,7 +220,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 		ctx, cancel := context.WithTimeout(r.Context(), db.QueryTimeoutDuration)
 		defer cancel()
 
-		post, err := app.store.Queries.GetPostById(ctx, id)
+		post, err := app.service.Post.GetPostById(ctx, id)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				app.notFoundResponse(w, r, db.ErrNotFound)

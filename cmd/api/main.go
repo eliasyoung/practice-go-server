@@ -67,6 +67,7 @@ func main() {
 
 	services := service.Services{
 		User: service.NewUserService(store),
+		Post: service.NewPostService(store),
 	}
 
 	app := &application{
