@@ -22,7 +22,7 @@ func NewUserService(store *db.Store) *UserService {
 	}
 }
 
-func (s *UserService) CreateUser(ctx context.Context, txq *db.Queries, username string, password []byte, email string) (db.CreateUserRow, error) {
+func (s *UserService) createUser(ctx context.Context, txq *db.Queries, username string, password []byte, email string) (db.CreateUserRow, error) {
 	user := db.CreateUserParams{
 		Username: username,
 		Password: password,
@@ -99,7 +99,7 @@ func (s *UserService) UnfollowUserById(ctx context.Context, uid int64, ufid int6
 
 func (s *UserService) CreateAndInviteUser(ctx context.Context, user db.CreateUserParams, token string, invitationExp time.Duration) error {
 	return db.ExecWithTx(ctx, s.store, func(q *db.Queries) error {
-		user, err := s.CreateUser(ctx, q, user.Username, user.Password, user.Email)
+		user, err := s.createUser(ctx, q, user.Username, user.Password, user.Email)
 		if err != nil {
 			return err
 		}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/eliasyoung/go-backend-server-practice/docs"
 	"github.com/eliasyoung/go-backend-server-practice/internal/db"
+	"github.com/eliasyoung/go-backend-server-practice/internal/mailer"
 	"github.com/eliasyoung/go-backend-server-practice/internal/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -20,6 +21,7 @@ type application struct {
 	store   db.Store
 	service service.Services
 	logger  *zap.SugaredLogger
+	mailer  mailer.Client
 }
 
 type config struct {
